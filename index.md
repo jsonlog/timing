@@ -1,2 +1,0 @@
-# jsonlog.github.io
-test
