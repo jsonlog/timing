@@ -869,7 +869,7 @@
         // 点击日期事件
         $(".days").click(function () {
             $(".days").css("background", "").css("border", "1px solid #f1ebe4");
-            $(this).css("background", "rgb(255, 248, 230);").css("border", "1px solid rgb(255, 203, 64)");
+            $(this).css("background", "rgb(255, 248, 230);").css("border", "1px solid rgb(220, 20, 60)");
             ClickDays = $(this).attr("id").split("days")[1];
             rightArea(Y, M);
         });
@@ -959,7 +959,7 @@
         $(".days").css("width", parseInt((width * rate - 16) / 7 - 2) + "px").css("height", parseInt((height - 16) / (count + 1) - 2.5) + "px");
         $(".days1").css("width", parseInt((width * rate - 16) / 7 - 2) + "px").css("height", parseInt((height - 16) / (count + 1) - 2.5) + "px");
         $(".num").css("line-height", parseInt((height - 16) / (count + 1)) / 2 + "px");
-        $("#days" + ClickDays).css("background", "rgb(255, 248, 230);").css("border", "1px solid rgb(255, 203, 64)");
+        $("#days" + ClickDays).css("background", "rgb(255, 248, 230);").css("border", "1px solid #DC143C");
     }
 
 })(this);
