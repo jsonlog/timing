@@ -213,6 +213,39 @@ body {
     color: #fff;
 }
 
+.calendar .leftArea .days .day {
+    position: relative;
+    padding: 2px;
+    /* float:right; */
+bottom: 0;
+    margin: 2px;
+    font-size: 12px;
+    z-index: 2;
+    color: #fff;
+}
+.calendar .leftArea .days .fest {
+    position: relative;
+    padding: 2px;
+    /* float:right; */
+bottom: 0;
+    margin: 2px;
+    font-size: 12px;
+    z-index: 2;
+    color: #fff;
+}
+
+.calendar .leftArea .days .bypass {
+    position: relative;
+    padding: 2px;
+    /* float:right; */
+bottom: 0;
+    margin: 2px;
+    font-size: 12px;
+    z-index: 2;
+    color: #fff;
+}
+
+
 
 /* 日历左边区域  天 */
 

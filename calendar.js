@@ -1,5 +1,34 @@
 (function () {
     var calendar = {
+      /**
+      * 公历节日
+      */
+      gregorianFestival: {
+          "1-1": "元旦",//TODO
+          "3-8": "妇女",
+          "3-12": "植树",
+          "5-1": "劳动",
+          "5-4": "青年",
+          "6-1": "儿童",
+          "7-1": "建党",
+          "8-1": "建军",
+          "9-10": "教师",
+          "10-1": "国庆"
+      },
+      /**
+      * 农历节日
+      */
+      lunarFestival: {
+          "1-1": "春",
+          "1-15": "元宵",
+          "5-5": "端午",
+          "7-7": "七夕",
+          "8-15": "中秋",
+          "9-9": "重阳",
+          "12-8": "腊八",
+          "12-24": "小年" // 有的是23小年 有的算24小年
+      },
+
         /**
         * 农历1900-2100的闰大小信息表
         * 例如：0x04bd8 相当于 0000 0100 1011 1101 1000      19位 --->  0位
@@ -58,7 +87,7 @@
         */
         solarTerm: ["小寒", "大寒", "立春", "雨水", "惊蛰", "春分", "清明", "谷雨", "立夏", "小满",
             "芒种", "夏至", "小暑", "大暑", "立秋", "处暑", "白露", "秋分", "寒露", "霜降", "立冬", "小雪",
-            "大雪", "冬至"
+            "大雪", "冬至 汤圆"
         ],
         /**
         * 24节气速查表,每种节气的计算数据
@@ -78,36 +107,7 @@
         /**
         * 月份转农历称呼速查表
         */
-        lunarMonthStr: ["正", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "腊"],
-        /**
-        * 农历节日
-        */
-        lunarFestival: {
-            "1-1": "春节",
-            "1-15": "元宵节",
-            "5-5": "端午节",
-            "7-7": "乞巧节",
-            "8-15": "中秋节",
-            "9-9": "重阳节",
-            "12-8": "腊八节",
-            "12-24": "小年" // 有的是23小年 有的算24小年
-        },
-        /**
-        * 公历节日
-        */
-        gregorianFestival: {
-            "1-1": "元旦",
-            "3-8": "妇女节",
-            "3-12": "植树节",
-            "5-1": "劳动节",
-            "5-4": "青年节",
-            "6-1": "儿童节",
-            "7-1": "建党节",
-            "8-1": "建军节",
-            "9-10": "教师节",
-            "10-1": "国庆节"
-        },
-        /*
+        lunarMonthStr: ["正", "二", "三", "四", "五", "六", "七", "八", "九", "十", "冬", "腊"],        /*
         * 返回农历Y年的天数、闰月信息和每个月的信息
         */
         getLunarYearDays: function (Y) {
@@ -263,7 +263,6 @@
         var Y = options.date.getFullYear();
         var M = options.date.getMonth() + 1;
         /* 拷贝configDay对应本月的设置信息 */
-        setconfigDayM(Y, M);
         ClickDays = options.date.getDate();
         /* 创建时间表格 */
         var datetable = new DateTable(Y, M, e);
@@ -276,6 +275,8 @@
         if (options.week) {
             setconfigDay(options, datetable.count, setWeek(options));
         }
+        setconfigDayM(Y, M);
+        setFestivalRemind(Y, M,datetable.days,options);
         setconfigDay(options, datetable.count, configDayM);
         $("#SY").val(Y);
         $("#SM").val(M);
@@ -286,7 +287,182 @@
         if (configDay["Y" + Y] && configDay["Y" + Y]["M" + M]) configDayM = $.extend(true, {}, configDay["Y" + Y]["M" + M]);
         else configDayM = {};
     }
+    function setFestivalRemind(Y,M,days,options){
+        var coefficient = [ 5.15, 5.37, 5.59, 4.82, 5.02, 5.26, 5.48, 4.70, 4.92, 5.135, 5.36, 4.60, 4.81, 5.04, 5.26 ];
+        var cd = parseInt(Y / 100 - 17);
+        var mod = parseInt(Y % 100);
+        var qingming = parseInt(mod * 0.2422 + coefficient[cd] - parseInt(mod / 4));
+        delete calendar.gregorianFestival["4-4"];
+        delete calendar.gregorianFestival["4-5"];
+        delete calendar.gregorianFestival["4-6"];
+        // calendar.gregorianFestival["4-6"] = "4-6";
+        // calendar.gregorianFestival["4-5"] = "4-5";
+        // calendar.gregorianFestival["4-4"] = "4-4";
+        calendar.gregorianFestival[4+"-"+qingming] = "清明节";//TODO
+        // alert(qingming+""+calendar.gregorianFestival[4+"-"+qingming]);
 
+        var date = new Date(Y + "/" + M + "/" + 1);
+        date.setDate(date.getDate() - 4);
+        for(var D=1;D < (days+7);D++){
+            date.setDate(date.getDate()+1);
+            var y = date.getFullYear();
+            var m = date.getMonth()+1;
+            var d = date.getDate();
+            var w = date.getDay();
+            var xiu = "休";
+            var lunar = calendar.calendarConvert(y, m, d);
+
+            if(M == 5 && w == 0 && d >=8 && d <=14){
+              for(var j=8;j<=14;j++){
+                delete calendar.gregorianFestival[m+"-"+j];
+              }
+              calendar.gregorianFestival[m+"-"+d] +="历母亲节";
+            }
+            if(M == 6 && w == 0 && d >=15 && d <=21){
+              for(var j=15;j<=21;j++){
+                delete calendar.gregorianFestival[m+"-"+j];
+              }
+              calendar.gregorianFestival[m+"-"+d] +="历父亲节";
+            }
+            addFestival(Y,y,M,m,d,xiu+calendar.gregorianFestival[m+"-"+d],w); //all
+            addFestival(Y,y,M,m,d,xiu+calendar.lunarFestival[lunar[2] + "-" + lunar[3]],w); //all
+
+            //国庆start
+            var flag = ((m == 9) && (d == 29) && (w == 6)) ||//1
+                      ((m == 9) && (d == 30) && (w == 0)) ||
+                      ((m == 9) && (d == 29) && (w == 0)) ||//2
+                      ((m == 10) && (d == 12) && (w == 6)) ||
+                      ((m == 9) && (d == 28) && (w == 0)) ||//3
+                      ((m == 10) && (d == 11) && (w == 6)) ||
+                      ((m == 9) && (d == 27) && (w == 0)) ||//4?
+                      ((m == 10) && (d == 10) && (w == 6)) ||
+                      ((m == 9) && (d == 26) && (w == 0)) ||//5?
+                      ((m == 10) && (d == 9) && (w == 6)) ||
+                      ((m == 10) && (d == 8) && (w == 6)) ||//6
+                      ((m == 10) && (d == 9) && (w == 0)) ||
+                      ((m == 9) && (d == 30) && (w == 6)) ||//0
+                      ((m == 10) && (d == 8) && (w == 0));
+            if(flag){
+              addFestival(Y,y,M,m,d,"班国庆节",-1);
+            }
+
+            var nextt = new Date(y + "/" + m + "/" + d);
+            var rest = "";
+            for(var j=0;j<6;j++){
+              nextt.setDate(nextt.getDate() - 1);
+              rest = xiu+calendar.gregorianFestival[nextt.getMonth()+1+"-"+nextt.getDate()];
+              if(rest.indexOf("国庆") != -1 ){
+                addFestival(Y,y,M,m,d,rest,nextt.getDay());
+              }
+            }
+            nextt = new Date(y + "/" + m + "/" + d);
+            for(var j=0;j<6;j++){
+              if(j == 0){
+                nextt.setDate(nextt.getDate() + 1);
+              }else{
+                nextt.setDate(nextt.getDate() - 1);
+              }
+              lunar = calendar.calendarConvert(nextt.getFullYear(), nextt.getMonth()+1, nextt.getDate());
+              rest = xiu+calendar.lunarFestival[lunar[2] + "-" + lunar[3]];
+              if(rest.indexOf("春节") != -1){
+                addFestival(Y,y,M,m,d,rest,nextt.getDay());
+              }
+              if(j == 0){
+                nextt.setDate(nextt.getDate() - 1);
+              }
+            }
+
+            xiu = "抢";
+            nextt = new Date(y + "/" + m + "/" + d);
+            nextt.setDate(nextt.getDate() + 29);
+            rest = xiu+calendar.gregorianFestival[nextt.getMonth()+1+"-"+nextt.getDate()];
+            addFestival(Y,y,M,m,d,rest,nextt.getDay());
+            nextt = new Date(y + "/" + m + "/" + d);
+            nextt.setDate(nextt.getDate() + 29);
+            lunar = calendar.calendarConvert(nextt.getFullYear(), nextt.getMonth()+1, nextt.getDate());
+            rest = xiu+calendar.lunarFestival[lunar[2] + "-" + lunar[3]];
+            if(rest.indexOf("春节") == -1)//排除春节当天抢票
+            addFestival(Y,y,M,m,d,rest,nextt.getDay());
+
+            for(var j=0;j<6;j++){
+              nextt.setDate(nextt.getDate() - 1);
+              rest = xiu+calendar.gregorianFestival[nextt.getMonth()+1+"-"+nextt.getDate()];
+              if(rest.indexOf("国庆") != -1){
+                addFestival(Y,y,M,m,d,rest,nextt.getDay());
+              }
+            }
+            nextt = new Date(y + "/" + m + "/" + d);
+            nextt.setDate(nextt.getDate() + 29 + 8);
+            for(var k=0;k<15;k++){//24(0) 25(1) 26(2) 27(3) 28(4) 29(5) ---  6(12) 7 8
+              nextt.setDate(nextt.getDate() - 1);
+              if(k>5 && k<12)continue;
+              lunar = calendar.calendarConvert(nextt.getFullYear(), nextt.getMonth()+1, nextt.getDate());
+              rest = xiu+calendar.lunarFestival[lunar[2] + "-" + lunar[3]];
+              if(rest.indexOf("春节") != -1 ){
+                addFestival(Y,y,M,m,d,rest,nextt.getDay());
+              }
+            }
+        }
+    }
+    function addFestivalRemind(Y,y,M,m,d,v){
+        if(Y.toString() == y.toString() && M.toString() == m.toString()){
+          if(v.indexOf("节") != -1 || v.indexOf("历") != -1 || v.indexOf("~") != -1){//
+            configDayM["D"+d] += v;
+            if((v.split("节")).length > 2){
+              alert("两个节假日重叠,请手动核实"+v);
+            }
+          // alert("Y"+Y+"y"+y+"M"+M+"m"+m+"D"+d+"v"+v);
+          }
+        }
+    }
+    function addFestival(Y,y,M,m,d,rest,w){
+      if(rest.indexOf("~") != -1 && rest.indexOf("抢") == -1)
+        addFestivalRemind(Y,y,M,m,d,rest.replace("休",""));
+      if(rest.indexOf("历") != -1 && rest.indexOf("抢") == -1)
+        addFestivalRemind(Y,y,M,m,d,rest.replace("休",""));
+      if(rest.indexOf("节") == -1 || rest.indexOf("历") != -1 || rest.indexOf("~") != -1) return;
+      // alert(y+""+m+""+d+""+rest);
+      addFestivalRemind(Y,y,M,m,d,rest);//TODO
+      if(rest.indexOf("春节") != -1){
+        return;
+      }
+      if(rest.indexOf("国庆") != -1){
+        return;
+      }
+      var date = new Date(y + "/" + m + "/" + d);
+      var pre = new Date(y + "/" + m + "/" + d);
+      pre.setDate(pre.getDate() - 1);
+      var prep = new Date(y + "/" + m + "/" + d);
+      prep.setDate(prep.getDate() - 2);
+      var prepp = new Date(y + "/" + m + "/" + d);
+      prepp.setDate(prepp.getDate() - 3);
+      var next = new Date(y + "/" + m + "/" + d);
+      next.setDate(next.getDate() + 1);
+      var nextp = new Date(y + "/" + m + "/" + d);
+      nextp.setDate(nextp.getDate() + 2);
+      var nextpp = new Date(y + "/" + m + "/" + d);
+      nextpp.setDate(nextpp.getDate() + 3);
+      if(w == 0){
+          addFestivalRemind(Y,pre.getFullYear(),M,pre.getMonth()+1,pre.getDate(),"pre休".replace("休",rest));
+          addFestivalRemind(Y,next.getFullYear(),M,next.getMonth()+1,next.getDate(),"next休".replace("休",rest));
+      }else if(w == 1){
+        addFestivalRemind(Y,prep.getFullYear(),M,prep.getMonth()+1,prep.getDate(),"prep休".replace("休",rest));
+        addFestivalRemind(Y,pre.getFullYear(),M,pre.getMonth()+1,pre.getDate(),"pre休".replace("休",rest));
+      }else if(w == 2){
+        if(rest.indexOf("抢") == -1)
+          addFestivalRemind(Y,prepp.getFullYear(),M,prepp.getMonth()+1,prepp.getDate(),"prepp班"+rest.replace("休",""));
+          addFestivalRemind(Y,prep.getFullYear(),M,prep.getMonth()+1,prep.getDate(),"prep休".replace("休",rest));
+          addFestivalRemind(Y,pre.getFullYear(),M,pre.getMonth()+1,pre.getDate(),"pre休".replace("休",rest));
+      }else if(w == 4){
+        addFestivalRemind(Y,next.getFullYear(),M,next.getMonth()+1,next.getDate(),"next休".replace("休",rest));
+        addFestivalRemind(Y,nextp.getFullYear(),M,nextp.getMonth()+1,nextp.getDate(),"nextp休".replace("休",rest));
+        if(rest.indexOf("抢") == -1)
+        addFestivalRemind(Y,nextpp.getFullYear(),M,nextpp.getMonth()+1,nextpp.getDate(),"nextpp班"+rest.replace("休",""));
+      }else if(w == 5 || w == 6){
+        addFestivalRemind(Y,next.getFullYear(),M,next.getMonth()+1,next.getDate(),"next休".replace("休",rest));
+        addFestivalRemind(Y,nextp.getFullYear(),M,nextp.getMonth()+1,nextp.getDate(),"nextp休".replace("休",rest));
+      }
+    }
     /* 设置单双休 */
     function setWeek(options) {
         var Y = options.date.getFullYear();
@@ -300,10 +476,11 @@
         var week = 0;
         while (alldays >= D) {
             week = parseInt((new Date(Y + "/" + M + "/" + D) - new Date(options.week_walue)) / (3600 * 24 * 1000 * 7));
-            if (week != 0 && week % 2 != 0) _configDayM += "\"D" + D + "\":\"1\",";
+            if (week != 0 && week % 2 != 0) _configDayM += "\"D" + D + "\":\"班\",";
             D += 7;
         }
         _configDayM = _configDayM.substring(0, _configDayM.length - 1) + "}";
+          // alert(JSON.stringify(_configDayM));
         return JSON.parse(_configDayM);
     }
 
@@ -316,19 +493,40 @@
         var D = "0";
         if (_configDayM) {
             $.each(_configDayM, function (k, v) {
-                D = k.split("D")[1];
-                var temp = $("#days" + D).find(".xbgj");
-                if (temp.length > 0) {
-                    $("#days" + D).find(".xbgj").remove();
-                }
-                if (v == 0) {
+              D = k.split("D")[1];
+              var temp = $("#days" + D).find(".xbgj");
+              if (temp.length > 0) {
+                  $("#days" + D).find(".xbgj").remove();
+              }
+              //TODO
+              if(options.rest){
+                if (v.indexOf("休") != -1) {
                     $("#days" + D).append("<div class=\"xbgj\" xbgj=\"0\" style=\"position: absolute;\"><div class=\"rest\" style=\"top:" +
             -parseInt((height - 16) / (count + 1) - 2) + "px;background-color: #53a253\">休</div></div>");
                 }
-                if (v == 1) {
+                if (v.indexOf("班") != -1) {
                     $("#days" + D).append("<div class=\"xbgj\" xbgj=\"1\" style=\"position: absolute;\"><div class=\"rest\" style=\"top:" +
             -parseInt((height - 16) / (count + 1) - 2) + "px;background-color: #e15e5e\">班</div></div>");
                 }
+              }
+              if(options.day){
+                if (v.indexOf("历") != -1) {
+                    $("#days" + D).append("<div class=\"xbgj\" xbgj=\"1\" style=\"position: absolute;\"><div class=\"day\" style=\"top:" +
+            -parseInt((height - 16) / (count + 1) - 2  -28) + "px;left:"+parseInt(0)+"px;background-color: #1E90FF\">生</div></div>");
+                }
+              }
+              if(options.fest){
+                if (v.indexOf("~") != -1) {
+                    $("#days" + D).append("<div class=\"xbgj\" xbgj=\"1\" style=\"position: absolute;\"><div class=\"fest\" style=\"top:" +
+            -parseInt((height - 16) / (count + 1) - 2) + "px;left:"+parseInt(55)+"px;background-color: #ADFF2F\">节</div></div>");
+                }
+              }
+              if(options.bypass){
+                if (v.indexOf("抢") != -1) {
+                    $("#days" + D).append("<div class=\"xbgj\" xbgj=\"1\" style=\"position: absolute;\"><div class=\"bypass\" style=\"top:" +
+            -parseInt((height - 16) / (count + 1) - 2  -28) + "px;left:"+parseInt(55)+"px;background-color: #0000FF\">抢</div></div>");
+                }
+              }
             });
         }
     }
@@ -345,6 +543,80 @@
         temp = this.days + this.W - 1;
         this.count = temp % 7 == 0 ? parseInt(temp / 7) : parseInt(temp / 7) + 1;
         this.html = "";
+    };
+
+    /* 获取对应的阴历日期 */
+    DateTable.prototype.lunarDay = function () {
+      for(var j=8;j<=14;j++){
+        delete calendar.gregorianFestival[5+"-"+j];
+        delete calendar.gregorianFestival["6-"+(j+7)];
+      }
+      delete calendar.gregorianFestival["4-4"];
+      delete calendar.gregorianFestival["4-5"];
+      delete calendar.gregorianFestival["4-6"];
+        var lunar = calendar.calendarConvert(this.Y, this.M, 1);
+        var info = calendar.getLunarYearDays(lunar[1]);
+        var temp = "";
+        var flag = 0;
+        var solarTerms = "";
+        var tm = this.M - 1;
+        // 本月对应节气的日期
+        var tmp1 = sTerm(this.Y, tm * 2) - 1;
+        var tmp2 = sTerm(this.Y, tm * 2 + 1) - 1;
+        for (var i = 0; i < this.days; i += 1) {
+            solarTerms = "";
+            // 对应的农历日期
+            if (lunar[3] === 1) {
+                temp = calendar.lunarMonthStr[lunar[2] - 1] + "月";
+                if (lunar[0] === 1) temp = "闰" + temp;
+            } else if (lunar[3] == 10) { temp = "初十"; }
+            else { temp = calendar.lunarDayStrFirst[parseInt(lunar[3] / 10)] + calendar.lunarDayStrLast[lunar[3] % 10] }
+            // 判断今天时候是对应节气的日期
+            if (tmp1 == i) solarTerms = calendar.solarTerm[tm * 2];
+            if (tmp2 == i) solarTerms = calendar.solarTerm[tm * 2 + 1];
+            // 显示  有限级别  节日/节气/农历
+            var temp2 = "";
+            var W = new Date(this.Y + "/" + this.M + "/" + (i+1)).getDay();
+            // if(this.M == 5 && W == 0 && (i+1) >=8 && (i+1) <=14) temp2 += "母亲节";
+            // if(this.M == 6 && W == 0 && (i+1) >=15 && (i+1) <=21) temp2 += "父亲节";
+            if(calendar.lunarFestival[lunar[2] + "-" + lunar[3]]) temp2 += calendar.lunarFestival[lunar[2] + "-" + lunar[3]];
+            if(calendar.gregorianFestival[this.M + "-" + (i + 1)]) temp2 += calendar.gregorianFestival[this.M + "-" + (i + 1)];
+            if(solarTerms) temp2 += solarTerms;
+            if(temp2) temp = temp2;
+            $("#lunar" + (i + 1)).append(temp);
+            // 设置不同的显示字体颜色
+            if (calendar.lunarFestival[lunar[2] + "-" + lunar[3]] || calendar.gregorianFestival[this.M + "-" + (i + 1)]) {
+                $("#lunar" + (i + 1)).css("color", "red");
+            } else if (solarTerms !== "") {
+                $("#lunar" + (i + 1)).css("color", "green");
+            }
+            // 计算下个日期的农历
+            if (info.leapMonth[0] === lunar[2] && lunar[0] == 1) { flag = info.leapMonth[1]; }
+            else flag = info.lunarMonth[lunar[2] - 1] === 0 ? 29 : 30;
+            if (lunar[3] + 1 > flag) {
+                lunar[3] = 1;
+                if (lunar[2] !== info.leapMonth[0]) {
+                    if (lunar[2] + 1 > 12) {
+                        lunar[1] += 1;
+                        lunar[2] = 1;
+                        info = calendar.getLunarYearDays(lunar[1]);
+                    } else lunar[2] += 1;
+                }
+                else {
+                    if (lunar[0] === 1) {
+                        if (lunar[2] + 1 > 12) {
+                            lunar[1] += 1;
+                            lunar[2] = 1;
+                            info = calendar.getLunarYearDays(lunar[1]);
+                        } else {
+                            lunar[2] += 1;
+                            lunar[0] = 0;
+                        }
+                    }
+                    else { lunar[0] = 1; }
+                }
+            } else { lunar[3] += 1; }
+        }
     };
 
     /* 创建表格 */
@@ -418,66 +690,6 @@
         return (offDate.getUTCDate());
     }
 
-    /* 获取对应的阴历日期 */
-    DateTable.prototype.lunarDay = function () {
-        var lunar = calendar.calendarConvert(this.Y, this.M, 1);
-        var info = calendar.getLunarYearDays(lunar[1]);
-        var temp = "";
-        var flag = 0;
-        var solarTerms = "";
-        var tm = this.M - 1;
-        // 本月对应节气的日期
-        var tmp1 = sTerm(this.Y, tm * 2) - 1;
-        var tmp2 = sTerm(this.Y, tm * 2 + 1) - 1;
-        for (var i = 0; i < this.days; i += 1) {
-            solarTerms = "";
-            // 对应的农历日期
-            if (lunar[3] === 1) {
-                temp = calendar.lunarMonthStr[lunar[2] - 1] + "月";
-                if (lunar[0] === 1) temp = "闰" + temp;
-            } else if (lunar[3] == 10) { temp = "初十"; }
-            else { temp = calendar.lunarDayStrFirst[parseInt(lunar[3] / 10)] + calendar.lunarDayStrLast[lunar[3] % 10] }
-            // 判断今天时候是对应节气的日期
-            if (tmp1 == i) solarTerms = calendar.solarTerm[tm * 2];
-            if (tmp2 == i) solarTerms = calendar.solarTerm[tm * 2 + 1];
-            // 显示  有限级别  节日/节气/农历
-            temp = calendar.lunarFestival[lunar[2] + "-" + lunar[3]] || calendar.gregorianFestival[this.M + "-" + (i + 1)] || solarTerms || temp;
-            $("#lunar" + (i + 1)).append(temp);
-            // 设置不同的显示字体颜色
-            if (calendar.lunarFestival[lunar[2] + "-" + lunar[3]] || calendar.gregorianFestival[this.M + "-" + (i + 1)]) {
-                $("#lunar" + (i + 1)).css("color", "red");
-            } else if (solarTerms !== "") {
-                $("#lunar" + (i + 1)).css("color", "green");
-            }
-            // 计算下个日期的农历
-            if (info.leapMonth[0] === lunar[2] && lunar[0] == 1) { flag = info.leapMonth[1]; }
-            else flag = info.lunarMonth[lunar[2] - 1] === 0 ? 29 : 30;
-            if (lunar[3] + 1 > flag) {
-                lunar[3] = 1;
-                if (lunar[2] !== info.leapMonth[0]) {
-                    if (lunar[2] + 1 > 12) {
-                        lunar[1] += 1;
-                        lunar[2] = 1;
-                        info = calendar.getLunarYearDays(lunar[1]);
-                    } else lunar[2] += 1;
-                }
-                else {
-                    if (lunar[0] === 1) {
-                        if (lunar[2] + 1 > 12) {
-                            lunar[1] += 1;
-                            lunar[2] = 1;
-                            info = calendar.getLunarYearDays(lunar[1]);
-                        } else {
-                            lunar[2] += 1;
-                            lunar[0] = 0;
-                        }
-                    }
-                    else { lunar[0] = 1; }
-                }
-            } else { lunar[3] += 1; }
-        }
-    };
-
     // 生成右边区域代码
     function rightArea(Y, M) {
         var html = "";
@@ -546,6 +758,15 @@
             html += calendar.gregorianFestival[M + "-" + ClickDays] + " ";
             temp = 1;
         }
+        // var W = new Date(Y + "/" + M + "/" + ClickDays).getDay();
+        // if(M == 5 && W == 0 && ClickDays >=8 && ClickDays <=14){
+        //     html += "母亲节"  + " ";
+        //     temp = 1;
+        // }
+        // if(M == 6 && W == 0 && ClickDays >=15 && ClickDays <=21){
+        //     html += "父亲节"  + " ";
+        //     temp = 1;
+        // }
         var solarTerms = "";
         var tm = M - 1;
         var tmp1 = sTerm(Y, tm * 2);

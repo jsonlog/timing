@@ -16,9 +16,21 @@ $(function() {
          * JSON格式：Y加年-M加月-D加日
          * 0表示休假 1表示加吧
          */
-        week: true, // 是否开启单双休
+        week: false, // 是否开启单双休
+        rest: false,
+        day : false,
+        fest : false,
+        bypass : false,
         week_walue: "2016/9/17", // 双休对应的周六
         isclick: true,
-        configDay: {} // 系统配置
+        // configDay: {
+        //     "Y2018": {
+        //         "M6": {
+        //             "D1": "休",
+        //             "D7": "班",
+        //             "D5": "抢",
+        //         }
+        //     }
+        // } // 系统配置
     });
 });
